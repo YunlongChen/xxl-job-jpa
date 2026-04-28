@@ -50,29 +50,27 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
     @Override
     @Transactional
     public int registrySaveOrUpdate(String registryGroup, String registryKey, String registryValue, Date updateTime) {
-        List<XxlJobRegistry> list = entityManager
+        int affected = entityManager
                 .createQuery(
-                        "from XxlJobRegistry r where r.registryGroup = :registryGroup and r.registryKey = :registryKey and r.registryValue = :registryValue",
-                        XxlJobRegistry.class
+                        "update XxlJobRegistry r set r.updateTime = :updateTime " +
+                                "where r.registryGroup = :registryGroup and r.registryKey = :registryKey and r.registryValue = :registryValue"
                 )
+                .setParameter("updateTime", updateTime)
                 .setParameter("registryGroup", registryGroup)
                 .setParameter("registryKey", registryKey)
                 .setParameter("registryValue", registryValue)
-                .setMaxResults(1)
-                .getResultList();
+                .executeUpdate();
 
-        XxlJobRegistry registry;
-        if (list.isEmpty()) {
-            registry = new XxlJobRegistry();
+        if (affected > 0) {
+            return affected;
+        }
+
+        XxlJobRegistry registry = new XxlJobRegistry();
             registry.setRegistryGroup(registryGroup);
             registry.setRegistryKey(registryKey);
             registry.setRegistryValue(registryValue);
             registry.setUpdateTime(updateTime);
             entityManager.persist(registry);
-        } else {
-            registry = list.getFirst();
-            registry.setUpdateTime(updateTime);
-        }
         return 1;
     }
 
@@ -99,4 +97,3 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
                 .executeUpdate();
     }
 }
-

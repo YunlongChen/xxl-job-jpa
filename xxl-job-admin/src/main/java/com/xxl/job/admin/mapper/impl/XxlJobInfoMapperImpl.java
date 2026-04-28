@@ -56,7 +56,6 @@ public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
         }
         exist.setJobGroup(xxlJobInfo.getJobGroup());
         exist.setJobDesc(xxlJobInfo.getJobDesc());
-        exist.setAddTime(xxlJobInfo.getAddTime());
         exist.setUpdateTime(xxlJobInfo.getUpdateTime());
         exist.setAuthor(xxlJobInfo.getAuthor());
         exist.setAlarmEmail(xxlJobInfo.getAlarmEmail());
@@ -228,4 +227,3 @@ public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
     private record QueryParts(String jpql, Map<String, Object> params) {
     }
 }
-
