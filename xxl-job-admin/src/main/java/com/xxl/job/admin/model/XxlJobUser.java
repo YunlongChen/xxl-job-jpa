@@ -1,10 +1,21 @@
 package com.xxl.job.admin.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 /**
  * @author xuxueli 2019-05-04 16:43:12
  */
+@Entity
+@Table(name = "xxl_job_user")
 public class XxlJobUser {
 	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String username;		// 账号
 	private String password;		// 密码

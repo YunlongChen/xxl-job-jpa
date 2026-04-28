@@ -2,7 +2,6 @@ package com.xxl.job.admin.mapper;
 
 import com.xxl.job.admin.constant.TriggerStatus;
 import com.xxl.job.admin.model.XxlJobInfo;
-import com.xxl.job.admin.scheduler.config.XxlJobAdminBootstrap;
 import com.xxl.job.admin.scheduler.misfire.MisfireStrategyEnum;
 import com.xxl.job.admin.scheduler.type.ScheduleTypeEnum;
 import com.xxl.tool.core.CollectionTool;
@@ -106,7 +105,7 @@ public class XxlJobInfoMapperTest {
 		// batch update
 		List<List<XxlJobInfo>> scheduleListBatches = CollectionTool.split(list2, batchSize);
 		for (List<XxlJobInfo> scheduleListBatch : scheduleListBatches) {
-			int totalAffected = XxlJobAdminBootstrap.getInstance().getXxlJobInfoMapper().scheduleBatchUpdate(scheduleListBatch);
+			int totalAffected = xxlJobInfoMapper.scheduleBatchUpdate(scheduleListBatch);
 			logger.info("scheduleBatchUpdate records:" + totalAffected);
 		}
 	}
