@@ -9,6 +9,5 @@ import java.util.Optional;
 
 public interface XxlJobLockRepository extends JpaRepository<XxlJobLock, String> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<XxlJobLock> findByLockName(String lockName);
 }

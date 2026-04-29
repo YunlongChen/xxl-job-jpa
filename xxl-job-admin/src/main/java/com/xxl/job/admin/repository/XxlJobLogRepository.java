@@ -14,7 +14,4 @@ public interface XxlJobLogRepository extends JpaRepository<XxlJobLog, Long>, Jpa
     int deleteByJobId(int jobId);
 
     long countByIdIn(List<Long> ids);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<XxlJobLog> findById(Long id);
 }
