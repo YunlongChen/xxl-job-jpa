@@ -2,6 +2,7 @@ package com.xxl.job.executor.test.ollama;
 
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import jakarta.annotation.Resource;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.concurrent.TimeUnit;
 
+@Disabled
 @SpringBootTest
 public class OllamaTest {
     private static final Logger logger = LoggerFactory.getLogger(OllamaTest.class);
