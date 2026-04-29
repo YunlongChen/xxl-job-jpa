@@ -55,8 +55,7 @@ public class XxlJobInfo {
 	@Column(name = "executor_handler")
 	private String executorHandler;		    // 执行器，任务Handler名称
 
-	@Lob
-	@Column(name = "executor_param")
+	@Column(name = "executor_param", columnDefinition = "TEXT")
 	private String executorParam;		    // 执行器，任务参数
 
 	@Column(name = "executor_block_strategy")
@@ -71,8 +70,7 @@ public class XxlJobInfo {
 	@Column(name = "glue_type")
 	private String glueType;		// GLUE类型：GlueTypeEnum
 
-	@Lob
-	@Column(name = "glue_source")
+	@Column(name = "glue_source", columnDefinition = "TEXT")
 	private String glueSource;		// GLUE源代码
 
 	@Column(name = "glue_remark")

@@ -28,8 +28,7 @@ public class XxlJobLogGlue {
 	@Column(name = "glue_type")
 	private String glueType;		// GLUE类型	#com.xxl.job.core.glue.GlueTypeEnum
 
-	@Lob
-	@Column(name = "glue_source")
+	@Column(name = "glue_source", columnDefinition = "TEXT")
 	private String glueSource;
 
 	@Column(name = "glue_remark")

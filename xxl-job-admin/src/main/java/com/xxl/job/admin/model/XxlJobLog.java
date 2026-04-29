@@ -36,8 +36,7 @@ public class XxlJobLog {
 	@Column(name = "executor_handler")
 	private String executorHandler;
 
-	@Lob
-	@Column(name = "executor_param")
+	@Column(name = "executor_param", columnDefinition = "TEXT")
 	private String executorParam;
 
 	@Column(name = "executor_sharding_param")
@@ -53,8 +52,7 @@ public class XxlJobLog {
 	@Column(name = "trigger_code")
 	private int triggerCode;
 
-	@Lob
-	@Column(name = "trigger_msg")
+	@Column(name = "trigger_msg", columnDefinition = "TEXT")
 	private String triggerMsg;
 	
 	// handle info
@@ -64,8 +62,7 @@ public class XxlJobLog {
 	@Column(name = "handle_code")
 	private int handleCode;
 
-	@Lob
-	@Column(name = "handle_msg")
+	@Column(name = "handle_msg", columnDefinition = "TEXT")
 	private String handleMsg;
 
 	// alarm info

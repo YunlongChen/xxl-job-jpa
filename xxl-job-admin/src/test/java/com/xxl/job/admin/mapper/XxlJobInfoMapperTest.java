@@ -31,6 +31,11 @@ public class XxlJobInfoMapperTest {
 		logger.info("", list_count);
 
 		List<XxlJobInfo> list2 = xxlJobInfoMapper.getJobsByGroup(1);
+		if (!list2.isEmpty()) {
+			XxlJobInfo info = list2.getFirst();
+			logger.info("Test LOB field reading without Transaction: executorParam={}, glueSource={}", 
+				info.getExecutorParam(), info.getGlueSource());
+		}
 	}
 	
 	@Test
