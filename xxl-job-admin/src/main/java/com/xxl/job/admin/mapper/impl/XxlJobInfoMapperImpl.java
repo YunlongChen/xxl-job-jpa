@@ -103,26 +103,26 @@ public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
 
     @Override
     public List<XxlJobInfo> scheduleJobQuery(long maxNextTime, int pagesize) {
-        return xxlJobInfoRepository.scheduleJobQuery(maxNextTime, PageRequest.of(0, pagesize));
+        return xxlJobInfoRepository.findByTriggerStatusAndTriggerNextTimeLessThanEqualOrderByIdAsc(1, maxNextTime, PageRequest.of(0, pagesize));
     }
 
     @Override
     @Transactional
     public int scheduleUpdate(XxlJobInfo xxlJobInfo) {
-        if (xxlJobInfo.getTriggerStatus() >= 0) {
-            return xxlJobInfoRepository.scheduleUpdateWithStatus(
-                    xxlJobInfo.getId(),
-                    xxlJobInfo.getTriggerLastTime(),
-                    xxlJobInfo.getTriggerNextTime(),
-                    xxlJobInfo.getTriggerStatus()
-            );
+        XxlJobInfo exist = xxlJobInfoRepository.findById(xxlJobInfo.getId()).orElse(null);
+        if (exist == null) {
+            return 0;
         }
-
-        return xxlJobInfoRepository.scheduleUpdateNoStatus(
-                xxlJobInfo.getId(),
-                xxlJobInfo.getTriggerLastTime(),
-                xxlJobInfo.getTriggerNextTime()
-        );
+        if (exist.getTriggerStatus() != 1) {
+            return 0;
+        }
+        exist.setTriggerLastTime(xxlJobInfo.getTriggerLastTime());
+        exist.setTriggerNextTime(xxlJobInfo.getTriggerNextTime());
+        if (xxlJobInfo.getTriggerStatus() >= 0) {
+            exist.setTriggerStatus(xxlJobInfo.getTriggerStatus());
+        }
+        xxlJobInfoRepository.save(exist);
+        return 1;
     }
 
     @Override

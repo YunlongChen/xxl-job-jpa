@@ -41,12 +41,11 @@ public class XxlJobLogReportMapperImpl implements XxlJobLogReportMapper {
 
     @Override
     public XxlJobLogReport queryLogReportTotal() {
-        Object[] row = xxlJobLogReportRepository.queryLogReportTotalAgg();
-
+        List<XxlJobLogReport> list = xxlJobLogReportRepository.findAll();
         XxlJobLogReport report = new XxlJobLogReport();
-        report.setRunningCount(((Number) row[0]).intValue());
-        report.setSucCount(((Number) row[1]).intValue());
-        report.setFailCount(((Number) row[2]).intValue());
+        report.setRunningCount(list.stream().mapToInt(XxlJobLogReport::getRunningCount).sum());
+        report.setSucCount(list.stream().mapToInt(XxlJobLogReport::getSucCount).sum());
+        report.setFailCount(list.stream().mapToInt(XxlJobLogReport::getFailCount).sum());
         return report;
     }
 }

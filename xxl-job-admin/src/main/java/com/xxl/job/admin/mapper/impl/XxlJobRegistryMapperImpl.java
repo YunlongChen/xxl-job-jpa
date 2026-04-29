@@ -22,8 +22,7 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
     @Override
     public List<Integer> findDead(int timeout, Date nowTime) {
         Date threshold = new Date(nowTime.getTime() - timeout * 1000L);
-        List<Long> ids = xxlJobRegistryRepository.findDeadIds(threshold);
-        return ids.stream().map(Long::intValue).toList();
+        return xxlJobRegistryRepository.findByUpdateTimeBefore(threshold).stream().map(it -> (int) it.getId()).toList();
     }
 
     @Override
@@ -33,22 +32,24 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
             return 0;
         }
         List<Long> longIds = ids.stream().map(Integer::longValue).toList();
-        return xxlJobRegistryRepository.deleteByIds(longIds);
+        xxlJobRegistryRepository.deleteAllByIdInBatch(longIds);
+        return longIds.size();
     }
 
     @Override
     public List<XxlJobRegistry> findAll(int timeout, Date nowTime) {
         Date threshold = new Date(nowTime.getTime() - timeout * 1000L);
-        return xxlJobRegistryRepository.findAlive(threshold);
+        return xxlJobRegistryRepository.findByUpdateTimeAfter(threshold);
     }
 
     @Override
     @Transactional
     public int registrySaveOrUpdate(String registryGroup, String registryKey, String registryValue, Date updateTime) {
-        int affected = xxlJobRegistryRepository.updateTime(registryGroup, registryKey, registryValue, updateTime);
-
-        if (affected > 0) {
-            return affected;
+        XxlJobRegistry exist = xxlJobRegistryRepository.findFirstByRegistryGroupAndRegistryKeyAndRegistryValue(registryGroup, registryKey, registryValue).orElse(null);
+        if (exist != null) {
+            exist.setUpdateTime(updateTime);
+            xxlJobRegistryRepository.save(exist);
+            return 1;
         }
 
         XxlJobRegistry registry = new XxlJobRegistry();
@@ -59,7 +60,13 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
         try {
             xxlJobRegistryRepository.saveAndFlush(registry);
         } catch (DataIntegrityViolationException e) {
-            return xxlJobRegistryRepository.updateTime(registryGroup, registryKey, registryValue, updateTime);
+            XxlJobRegistry concurrent = xxlJobRegistryRepository.findFirstByRegistryGroupAndRegistryKeyAndRegistryValue(registryGroup, registryKey, registryValue).orElse(null);
+            if (concurrent == null) {
+                return 0;
+            }
+            concurrent.setUpdateTime(updateTime);
+            xxlJobRegistryRepository.save(concurrent);
+            return 1;
         }
         return 1;
     }
@@ -67,12 +74,12 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
     @Override
     @Transactional
     public int registryDelete(String registryGroup, String registryKey, String registryValue) {
-        return xxlJobRegistryRepository.deleteOne(registryGroup, registryKey, registryValue);
+        return xxlJobRegistryRepository.deleteByRegistryGroupAndRegistryKeyAndRegistryValue(registryGroup, registryKey, registryValue);
     }
 
     @Override
     @Transactional
     public int removeByRegistryGroupAndKey(String registryGroup, String registryKey) {
-        return xxlJobRegistryRepository.deleteByGroupAndKey(registryGroup, registryKey);
+        return xxlJobRegistryRepository.deleteByRegistryGroupAndRegistryKey(registryGroup, registryKey);
     }
 }

@@ -4,6 +4,7 @@ import com.xxl.job.admin.mapper.XxlJobLogMapper;
 import com.xxl.job.admin.model.XxlJobLog;
 import com.xxl.job.admin.repository.OffsetBasedPageRequest;
 import com.xxl.job.admin.repository.XxlJobLogRepository;
+import com.xxl.job.admin.repository.XxlJobRegistryRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,14 +15,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Repository
 public class XxlJobLogMapperImpl implements XxlJobLogMapper {
 
     private final XxlJobLogRepository xxlJobLogRepository;
+    private final XxlJobRegistryRepository xxlJobRegistryRepository;
 
-    public XxlJobLogMapperImpl(XxlJobLogRepository xxlJobLogRepository) {
+    public XxlJobLogMapperImpl(XxlJobLogRepository xxlJobLogRepository, XxlJobRegistryRepository xxlJobRegistryRepository) {
         this.xxlJobLogRepository = xxlJobLogRepository;
+        this.xxlJobRegistryRepository = xxlJobRegistryRepository;
     }
 
     @Override
@@ -91,12 +95,13 @@ public class XxlJobLogMapperImpl implements XxlJobLogMapper {
 
     @Override
     public Map<String, Object> findLogReport(Date from, Date to) {
-        Object[] row = xxlJobLogRepository.findLogReportAgg(from, to);
-
+        long triggerDayCount = xxlJobLogRepository.count(XxlJobLogSpecifications.betweenTriggerTime(from, to));
+        long triggerDayCountRunning = xxlJobLogRepository.count(XxlJobLogSpecifications.runningBetween(from, to));
+        long triggerDayCountSuc = xxlJobLogRepository.count(XxlJobLogSpecifications.handleCodeBetween(from, to, 200));
         Map<String, Object> map = new HashMap<>();
-        map.put("triggerDayCount", ((Number) row[0]).longValue());
-        map.put("triggerDayCountRunning", ((Number) row[1]).longValue());
-        map.put("triggerDayCountSuc", ((Number) row[2]).longValue());
+        map.put("triggerDayCount", triggerDayCount);
+        map.put("triggerDayCountRunning", triggerDayCountRunning);
+        map.put("triggerDayCountSuc", triggerDayCountSuc);
         return map;
     }
 
@@ -126,26 +131,102 @@ public class XxlJobLogMapperImpl implements XxlJobLogMapper {
         if (logIds == null || logIds.isEmpty()) {
             return 0;
         }
-        return xxlJobLogRepository.deleteByIds(logIds);
+        long count = xxlJobLogRepository.countByIdIn(logIds);
+        xxlJobLogRepository.deleteAllByIdInBatch(logIds);
+        return (int) count;
     }
 
     @Override
     public List<Long> findFailJobLogIds(int pagesize) {
-        return xxlJobLogRepository.findFailJobLogIds(PageRequest.of(0, pagesize));
+        Specification<XxlJobLog> specification = XxlJobLogSpecifications.failNeedAlarmSpec();
+        return xxlJobLogRepository.findAll(specification, PageRequest.of(0, pagesize, Sort.by(Sort.Direction.ASC, "id")))
+                .getContent()
+                .stream()
+                .map(XxlJobLog::getId)
+                .toList();
     }
 
     @Override
     @Transactional
     public int updateAlarmStatus(long logId, int oldAlarmStatus, int newAlarmStatus) {
-        return xxlJobLogRepository.updateAlarmStatus(logId, oldAlarmStatus, newAlarmStatus);
+        XxlJobLog exist = xxlJobLogRepository.findById(logId).orElse(null);
+        if (exist == null) {
+            return 0;
+        }
+        if (exist.getAlarmStatus() != oldAlarmStatus) {
+            return 0;
+        }
+        exist.setAlarmStatus(newAlarmStatus);
+        xxlJobLogRepository.save(exist);
+        return 1;
     }
 
     @Override
     public List<Long> findLostJobIds(Date losedTime) {
-        return xxlJobLogRepository.findLostJobIds(losedTime);
+        List<XxlJobLog> candidates = xxlJobLogRepository.findAll(XxlJobLogSpecifications.lostCandidateSpec(losedTime));
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> addresses = candidates.stream()
+                .map(XxlJobLog::getExecutorAddress)
+                .filter(it -> it != null && !it.isBlank())
+                .distinct()
+                .toList();
+
+        Set<String> aliveAddresses;
+        if (addresses.isEmpty()) {
+            aliveAddresses = Set.of();
+        } else {
+            aliveAddresses = xxlJobRegistryRepository.findByRegistryValueIn(addresses)
+                    .stream()
+                    .map(it -> it.getRegistryValue())
+                    .collect(java.util.stream.Collectors.toSet());
+        }
+
+        return candidates.stream()
+                .filter(it -> it.getExecutorAddress() == null || !aliveAddresses.contains(it.getExecutorAddress()))
+                .map(XxlJobLog::getId)
+                .toList();
     }
 
     private static class XxlJobLogSpecifications {
+        private static Specification<XxlJobLog> betweenTriggerTime(Date from, Date to) {
+            return (root, query, cb) -> cb.between(root.get("triggerTime"), from, to);
+        }
+
+        private static Specification<XxlJobLog> runningBetween(Date from, Date to) {
+            return (root, query, cb) -> cb.and(
+                    cb.between(root.get("triggerTime"), from, to),
+                    root.get("triggerCode").in(0, 200),
+                    cb.equal(root.get("handleCode"), 0)
+            );
+        }
+
+        private static Specification<XxlJobLog> handleCodeBetween(Date from, Date to, int handleCode) {
+            return (root, query, cb) -> cb.and(
+                    cb.between(root.get("triggerTime"), from, to),
+                    cb.equal(root.get("handleCode"), handleCode)
+            );
+        }
+
+        private static Specification<XxlJobLog> failNeedAlarmSpec() {
+            return (root, query, cb) -> {
+                var running = cb.and(root.get("triggerCode").in(0, 200), cb.equal(root.get("handleCode"), 0));
+                var success = cb.equal(root.get("handleCode"), 200);
+                var isFail = cb.not(cb.or(running, success));
+                return cb.and(isFail, cb.equal(root.get("alarmStatus"), 0));
+            };
+        }
+
+        private static Specification<XxlJobLog> lostCandidateSpec(Date losedTime) {
+            return (root, query, cb) -> cb.and(
+                    cb.equal(root.get("triggerCode"), 200),
+                    cb.equal(root.get("handleCode"), 0),
+                    cb.lessThanOrEqualTo(root.get("triggerTime"), losedTime)
+            );
+        }
+
         private static Specification<XxlJobLog> groupAndJobIdSpec(int jobGroup, int jobId) {
             return (root, query, cb) -> {
                 var predicate = cb.conjunction();

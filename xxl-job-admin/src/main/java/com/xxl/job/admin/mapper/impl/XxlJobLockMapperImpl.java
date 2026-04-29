@@ -17,6 +17,6 @@ public class XxlJobLockMapperImpl implements XxlJobLockMapper {
     @Override
     @Transactional
     public String scheduleLock() {
-        return xxlJobLockRepository.findForUpdate("schedule_lock").map(it -> it.getLockName()).orElse(null);
+        return xxlJobLockRepository.findByLockName("schedule_lock").map(it -> it.getLockName()).orElse(null);
     }
 }

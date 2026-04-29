@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 public class XxlJobLogGlueMapperImpl implements XxlJobLogGlueMapper {
@@ -37,13 +39,26 @@ public class XxlJobLogGlueMapperImpl implements XxlJobLogGlueMapper {
             return deleteByJobId(jobId);
         }
 
-        List<Integer> keepIds = xxlJobLogGlueRepository.findKeepIds(jobId, PageRequest.of(0, limit));
+        Set<Integer> keepIds = xxlJobLogGlueRepository.findByJobIdOrderByUpdateTimeDesc(jobId, PageRequest.of(0, limit))
+                .stream()
+                .map(XxlJobLogGlue::getId)
+                .collect(Collectors.toSet());
 
         if (keepIds.isEmpty()) {
             return deleteByJobId(jobId);
         }
 
-        return xxlJobLogGlueRepository.deleteOld(jobId, keepIds);
+        List<Integer> removeIds = xxlJobLogGlueRepository.findByJobId(jobId)
+                .stream()
+                .map(XxlJobLogGlue::getId)
+                .filter(id -> !keepIds.contains(id))
+                .toList();
+
+        if (removeIds.isEmpty()) {
+            return 0;
+        }
+        xxlJobLogGlueRepository.deleteAllByIdInBatch(removeIds);
+        return removeIds.size();
     }
 
     @Override
