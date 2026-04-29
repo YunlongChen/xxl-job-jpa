@@ -2,55 +2,55 @@ package com.xxl.job.admin.mapper.impl;
 
 import com.xxl.job.admin.mapper.XxlJobInfoMapper;
 import com.xxl.job.admin.model.XxlJobInfo;
-import com.xxl.tool.core.StringTool;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
+import com.xxl.job.admin.repository.OffsetBasedPageRequest;
+import com.xxl.job.admin.repository.XxlJobInfoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final XxlJobInfoRepository xxlJobInfoRepository;
+
+    public XxlJobInfoMapperImpl(XxlJobInfoRepository xxlJobInfoRepository) {
+        this.xxlJobInfoRepository = xxlJobInfoRepository;
+    }
 
     @Override
     public List<XxlJobInfo> pageList(int offset, int pagesize, int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
-        QueryParts queryParts = buildPageQuery(jobGroup, triggerStatus, jobDesc, executorHandler, author);
-        TypedQuery<XxlJobInfo> query = entityManager.createQuery(queryParts.jpql + " order by i.id desc", XxlJobInfo.class);
-        queryParts.params.forEach(query::setParameter);
-        return query.setFirstResult(offset).setMaxResults(pagesize).getResultList();
+        Specification<XxlJobInfo> specification = XxlJobInfoSpecifications.build(jobGroup, triggerStatus, jobDesc, executorHandler, author);
+        return xxlJobInfoRepository.findAll(
+                specification,
+                new OffsetBasedPageRequest(offset, pagesize, Sort.by(Sort.Direction.DESC, "id"))
+        ).getContent();
     }
 
     @Override
     public int pageListCount(int offset, int pagesize, int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
-        QueryParts queryParts = buildPageQuery(jobGroup, triggerStatus, jobDesc, executorHandler, author);
-        TypedQuery<Long> query = entityManager.createQuery("select count(i) " + queryParts.jpql, Long.class);
-        queryParts.params.forEach(query::setParameter);
-        return query.getSingleResult().intValue();
+        return (int) xxlJobInfoRepository.count(XxlJobInfoSpecifications.build(jobGroup, triggerStatus, jobDesc, executorHandler, author));
     }
 
     @Override
     @Transactional
     public int save(XxlJobInfo info) {
-        entityManager.persist(info);
+        xxlJobInfoRepository.save(info);
         return 1;
     }
 
     @Override
     public XxlJobInfo loadById(int id) {
-        return entityManager.find(XxlJobInfo.class, id);
+        return xxlJobInfoRepository.findById(id).orElse(null);
     }
 
     @Override
     @Transactional
     public int update(XxlJobInfo xxlJobInfo) {
-        XxlJobInfo exist = entityManager.find(XxlJobInfo.class, xxlJobInfo.getId());
+        XxlJobInfo exist = xxlJobInfoRepository.findById(xxlJobInfo.getId()).orElse(null);
         if (exist == null) {
             return 0;
         }
@@ -76,72 +76,53 @@ public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
         exist.setTriggerStatus(xxlJobInfo.getTriggerStatus());
         exist.setTriggerLastTime(xxlJobInfo.getTriggerLastTime());
         exist.setTriggerNextTime(xxlJobInfo.getTriggerNextTime());
+        xxlJobInfoRepository.save(exist);
         return 1;
     }
 
     @Override
     @Transactional
     public int delete(long id) {
-        XxlJobInfo exist = entityManager.find(XxlJobInfo.class, (int) id);
-        if (exist == null) {
+        int intId = (int) id;
+        if (!xxlJobInfoRepository.existsById(intId)) {
             return 0;
         }
-        entityManager.remove(exist);
+        xxlJobInfoRepository.deleteById(intId);
         return 1;
     }
 
     @Override
     public List<XxlJobInfo> getJobsByGroup(int jobGroup) {
-        return entityManager
-                .createQuery("from XxlJobInfo i where i.jobGroup = :jobGroup", XxlJobInfo.class)
-                .setParameter("jobGroup", jobGroup)
-                .getResultList();
+        return xxlJobInfoRepository.findByJobGroup(jobGroup);
     }
 
     @Override
     public int findAllCount() {
-        return entityManager
-                .createQuery("select count(i) from XxlJobInfo i", Long.class)
-                .getSingleResult()
-                .intValue();
+        return (int) xxlJobInfoRepository.countBy();
     }
 
     @Override
     public List<XxlJobInfo> scheduleJobQuery(long maxNextTime, int pagesize) {
-        return entityManager
-                .createQuery(
-                        "from XxlJobInfo i where i.triggerStatus = 1 and i.triggerNextTime <= :maxNextTime order by i.id asc",
-                        XxlJobInfo.class
-                )
-                .setParameter("maxNextTime", maxNextTime)
-                .setMaxResults(pagesize)
-                .getResultList();
+        return xxlJobInfoRepository.scheduleJobQuery(maxNextTime, PageRequest.of(0, pagesize));
     }
 
     @Override
     @Transactional
     public int scheduleUpdate(XxlJobInfo xxlJobInfo) {
         if (xxlJobInfo.getTriggerStatus() >= 0) {
-            return entityManager
-                    .createQuery(
-                            "update XxlJobInfo i set i.triggerLastTime = :lastTime, i.triggerNextTime = :nextTime, i.triggerStatus = :status " +
-                                    "where i.id = :id and i.triggerStatus = 1"
-                    )
-                    .setParameter("lastTime", xxlJobInfo.getTriggerLastTime())
-                    .setParameter("nextTime", xxlJobInfo.getTriggerNextTime())
-                    .setParameter("status", xxlJobInfo.getTriggerStatus())
-                    .setParameter("id", xxlJobInfo.getId())
-                    .executeUpdate();
+            return xxlJobInfoRepository.scheduleUpdateWithStatus(
+                    xxlJobInfo.getId(),
+                    xxlJobInfo.getTriggerLastTime(),
+                    xxlJobInfo.getTriggerNextTime(),
+                    xxlJobInfo.getTriggerStatus()
+            );
         }
 
-        return entityManager
-                .createQuery(
-                        "update XxlJobInfo i set i.triggerLastTime = :lastTime, i.triggerNextTime = :nextTime where i.id = :id and i.triggerStatus = 1"
-                )
-                .setParameter("lastTime", xxlJobInfo.getTriggerLastTime())
-                .setParameter("nextTime", xxlJobInfo.getTriggerNextTime())
-                .setParameter("id", xxlJobInfo.getId())
-                .executeUpdate();
+        return xxlJobInfoRepository.scheduleUpdateNoStatus(
+                xxlJobInfo.getId(),
+                xxlJobInfo.getTriggerLastTime(),
+                xxlJobInfo.getTriggerNextTime()
+        );
     }
 
     @Override
@@ -150,80 +131,34 @@ public class XxlJobInfoMapperImpl implements XxlJobInfoMapper {
         if (jobInfoList == null || jobInfoList.isEmpty()) {
             return 0;
         }
-
-        StringBuilder sql = new StringBuilder("update xxl_job_info set ");
-
-        sql.append("trigger_last_time = case id");
-        for (int i = 0; i < jobInfoList.size(); i++) {
-            sql.append(" when :id").append(i).append(" then :last").append(i);
+        int total = 0;
+        for (XxlJobInfo item : jobInfoList) {
+            total += scheduleUpdate(item);
         }
-        sql.append(" else trigger_last_time end, ");
-
-        sql.append("trigger_next_time = case id");
-        for (int i = 0; i < jobInfoList.size(); i++) {
-            sql.append(" when :id").append(i).append(" then :next").append(i);
-        }
-        sql.append(" else trigger_next_time end, ");
-
-        sql.append("trigger_status = case id");
-        for (int i = 0; i < jobInfoList.size(); i++) {
-            XxlJobInfo item = jobInfoList.get(i);
-            if (item.getTriggerStatus() >= 0) {
-                sql.append(" when :id").append(i).append(" then :status").append(i);
-            } else {
-                sql.append(" when :id").append(i).append(" then trigger_status");
-            }
-        }
-        sql.append(" else trigger_status end ");
-
-        sql.append("where id in (");
-        for (int i = 0; i < jobInfoList.size(); i++) {
-            if (i > 0) {
-                sql.append(",");
-            }
-            sql.append(":id").append(i);
-        }
-        sql.append(") and trigger_status = 1");
-
-        jakarta.persistence.Query query = entityManager.createNativeQuery(sql.toString());
-        for (int i = 0; i < jobInfoList.size(); i++) {
-            XxlJobInfo item = jobInfoList.get(i);
-            query.setParameter("id" + i, item.getId());
-            query.setParameter("last" + i, item.getTriggerLastTime());
-            query.setParameter("next" + i, item.getTriggerNextTime());
-            if (item.getTriggerStatus() >= 0) {
-                query.setParameter("status" + i, item.getTriggerStatus());
-            }
-        }
-        return query.executeUpdate();
+        return total;
     }
 
-    private QueryParts buildPageQuery(int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
-        StringBuilder sb = new StringBuilder("from XxlJobInfo i where 1=1");
-        Map<String, Object> params = new HashMap<>();
-        if (jobGroup > 0) {
-            sb.append(" and i.jobGroup = :jobGroup");
-            params.put("jobGroup", jobGroup);
+    private static class XxlJobInfoSpecifications {
+        private static Specification<XxlJobInfo> build(int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
+            return (root, query, cb) -> {
+                var predicate = cb.conjunction();
+                if (jobGroup > 0) {
+                    predicate = cb.and(predicate, cb.equal(root.get("jobGroup"), jobGroup));
+                }
+                if (triggerStatus >= 0) {
+                    predicate = cb.and(predicate, cb.equal(root.get("triggerStatus"), triggerStatus));
+                }
+                if (jobDesc != null && !jobDesc.isBlank()) {
+                    predicate = cb.and(predicate, cb.like(root.get("jobDesc"), "%" + jobDesc + "%"));
+                }
+                if (executorHandler != null && !executorHandler.isBlank()) {
+                    predicate = cb.and(predicate, cb.like(root.get("executorHandler"), "%" + executorHandler + "%"));
+                }
+                if (author != null && !author.isBlank()) {
+                    predicate = cb.and(predicate, cb.like(root.get("author"), "%" + author + "%"));
+                }
+                return predicate;
+            };
         }
-        if (triggerStatus >= 0) {
-            sb.append(" and i.triggerStatus = :triggerStatus");
-            params.put("triggerStatus", triggerStatus);
-        }
-        if (StringTool.isNotBlank(jobDesc)) {
-            sb.append(" and i.jobDesc like :jobDesc");
-            params.put("jobDesc", "%" + jobDesc + "%");
-        }
-        if (StringTool.isNotBlank(executorHandler)) {
-            sb.append(" and i.executorHandler like :executorHandler");
-            params.put("executorHandler", "%" + executorHandler + "%");
-        }
-        if (StringTool.isNotBlank(author)) {
-            sb.append(" and i.author like :author");
-            params.put("author", "%" + author + "%");
-        }
-        return new QueryParts(sb.toString(), params);
-    }
-
-    private record QueryParts(String jpql, Map<String, Object> params) {
     }
 }

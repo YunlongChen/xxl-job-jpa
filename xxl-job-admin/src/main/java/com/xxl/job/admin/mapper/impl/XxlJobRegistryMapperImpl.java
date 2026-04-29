@@ -2,8 +2,8 @@ package com.xxl.job.admin.mapper.impl;
 
 import com.xxl.job.admin.mapper.XxlJobRegistryMapper;
 import com.xxl.job.admin.model.XxlJobRegistry;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.xxl.job.admin.repository.XxlJobRegistryRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,16 +13,16 @@ import java.util.List;
 @Repository
 public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final XxlJobRegistryRepository xxlJobRegistryRepository;
+
+    public XxlJobRegistryMapperImpl(XxlJobRegistryRepository xxlJobRegistryRepository) {
+        this.xxlJobRegistryRepository = xxlJobRegistryRepository;
+    }
 
     @Override
     public List<Integer> findDead(int timeout, Date nowTime) {
         Date threshold = new Date(nowTime.getTime() - timeout * 1000L);
-        List<Long> ids = entityManager
-                .createQuery("select r.id from XxlJobRegistry r where r.updateTime < :threshold", Long.class)
-                .setParameter("threshold", threshold)
-                .getResultList();
+        List<Long> ids = xxlJobRegistryRepository.findDeadIds(threshold);
         return ids.stream().map(Long::intValue).toList();
     }
 
@@ -33,67 +33,46 @@ public class XxlJobRegistryMapperImpl implements XxlJobRegistryMapper {
             return 0;
         }
         List<Long> longIds = ids.stream().map(Integer::longValue).toList();
-        return entityManager.createQuery("delete from XxlJobRegistry r where r.id in :ids")
-                .setParameter("ids", longIds)
-                .executeUpdate();
+        return xxlJobRegistryRepository.deleteByIds(longIds);
     }
 
     @Override
     public List<XxlJobRegistry> findAll(int timeout, Date nowTime) {
         Date threshold = new Date(nowTime.getTime() - timeout * 1000L);
-        return entityManager
-                .createQuery("from XxlJobRegistry r where r.updateTime > :threshold", XxlJobRegistry.class)
-                .setParameter("threshold", threshold)
-                .getResultList();
+        return xxlJobRegistryRepository.findAlive(threshold);
     }
 
     @Override
     @Transactional
     public int registrySaveOrUpdate(String registryGroup, String registryKey, String registryValue, Date updateTime) {
-        int affected = entityManager
-                .createQuery(
-                        "update XxlJobRegistry r set r.updateTime = :updateTime " +
-                                "where r.registryGroup = :registryGroup and r.registryKey = :registryKey and r.registryValue = :registryValue"
-                )
-                .setParameter("updateTime", updateTime)
-                .setParameter("registryGroup", registryGroup)
-                .setParameter("registryKey", registryKey)
-                .setParameter("registryValue", registryValue)
-                .executeUpdate();
+        int affected = xxlJobRegistryRepository.updateTime(registryGroup, registryKey, registryValue, updateTime);
 
         if (affected > 0) {
             return affected;
         }
 
         XxlJobRegistry registry = new XxlJobRegistry();
-            registry.setRegistryGroup(registryGroup);
-            registry.setRegistryKey(registryKey);
-            registry.setRegistryValue(registryValue);
-            registry.setUpdateTime(updateTime);
-            entityManager.persist(registry);
+        registry.setRegistryGroup(registryGroup);
+        registry.setRegistryKey(registryKey);
+        registry.setRegistryValue(registryValue);
+        registry.setUpdateTime(updateTime);
+        try {
+            xxlJobRegistryRepository.saveAndFlush(registry);
+        } catch (DataIntegrityViolationException e) {
+            return xxlJobRegistryRepository.updateTime(registryGroup, registryKey, registryValue, updateTime);
+        }
         return 1;
     }
 
     @Override
     @Transactional
     public int registryDelete(String registryGroup, String registryKey, String registryValue) {
-        return entityManager.createQuery(
-                        "delete from XxlJobRegistry r where r.registryGroup = :registryGroup and r.registryKey = :registryKey and r.registryValue = :registryValue"
-                )
-                .setParameter("registryGroup", registryGroup)
-                .setParameter("registryKey", registryKey)
-                .setParameter("registryValue", registryValue)
-                .executeUpdate();
+        return xxlJobRegistryRepository.deleteOne(registryGroup, registryKey, registryValue);
     }
 
     @Override
     @Transactional
     public int removeByRegistryGroupAndKey(String registryGroup, String registryKey) {
-        return entityManager.createQuery(
-                        "delete from XxlJobRegistry r where r.registryGroup = :registryGroup and r.registryKey = :registryKey"
-                )
-                .setParameter("registryGroup", registryGroup)
-                .setParameter("registryKey", registryKey)
-                .executeUpdate();
+        return xxlJobRegistryRepository.deleteByGroupAndKey(registryGroup, registryKey);
     }
 }

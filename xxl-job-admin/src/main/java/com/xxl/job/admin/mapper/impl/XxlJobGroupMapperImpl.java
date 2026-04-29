@@ -2,107 +2,92 @@ package com.xxl.job.admin.mapper.impl;
 
 import com.xxl.job.admin.mapper.XxlJobGroupMapper;
 import com.xxl.job.admin.model.XxlJobGroup;
-import com.xxl.tool.core.StringTool;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
+import com.xxl.job.admin.repository.OffsetBasedPageRequest;
+import com.xxl.job.admin.repository.XxlJobGroupRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class XxlJobGroupMapperImpl implements XxlJobGroupMapper {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final XxlJobGroupRepository xxlJobGroupRepository;
+
+    public XxlJobGroupMapperImpl(XxlJobGroupRepository xxlJobGroupRepository) {
+        this.xxlJobGroupRepository = xxlJobGroupRepository;
+    }
 
     @Override
     public List<XxlJobGroup> findAll() {
-        return entityManager
-                .createQuery("from XxlJobGroup g order by g.appname, g.title, g.id asc", XxlJobGroup.class)
-                .getResultList();
+        return xxlJobGroupRepository.findAllByOrderByAppnameAscTitleAscIdAsc();
     }
 
     @Override
     public List<XxlJobGroup> findByAddressType(int addressType) {
-        return entityManager
-                .createQuery("from XxlJobGroup g where g.addressType = :addressType order by g.appname, g.title, g.id asc", XxlJobGroup.class)
-                .setParameter("addressType", addressType)
-                .getResultList();
+        return xxlJobGroupRepository.findByAddressTypeOrderByAppnameAscTitleAscIdAsc(addressType);
     }
 
     @Override
     @Transactional
     public int save(XxlJobGroup xxlJobGroup) {
-        entityManager.persist(xxlJobGroup);
+        xxlJobGroupRepository.save(xxlJobGroup);
         return 1;
     }
 
     @Override
     @Transactional
     public int update(XxlJobGroup xxlJobGroup) {
-        XxlJobGroup exist = entityManager.find(XxlJobGroup.class, xxlJobGroup.getId());
-        if (exist == null) {
+        if (!xxlJobGroupRepository.existsById(xxlJobGroup.getId())) {
             return 0;
         }
-        exist.setAppname(xxlJobGroup.getAppname());
-        exist.setTitle(xxlJobGroup.getTitle());
-        exist.setAddressType(xxlJobGroup.getAddressType());
-        exist.setAddressList(xxlJobGroup.getAddressList());
-        exist.setUpdateTime(xxlJobGroup.getUpdateTime());
+        xxlJobGroupRepository.save(xxlJobGroup);
         return 1;
     }
 
     @Override
     @Transactional
     public int remove(int id) {
-        XxlJobGroup exist = entityManager.find(XxlJobGroup.class, id);
-        if (exist == null) {
+        if (!xxlJobGroupRepository.existsById(id)) {
             return 0;
         }
-        entityManager.remove(exist);
+        xxlJobGroupRepository.deleteById(id);
         return 1;
     }
 
     @Override
     public XxlJobGroup load(int id) {
-        return entityManager.find(XxlJobGroup.class, id);
+        return xxlJobGroupRepository.findById(id).orElse(null);
     }
 
     @Override
     public List<XxlJobGroup> pageList(int offset, int pagesize, String appname, String title) {
-        QueryParts queryParts = buildQuery(appname, title);
-        TypedQuery<XxlJobGroup> query = entityManager.createQuery(queryParts.jpql + " order by g.appname, g.title, g.id asc", XxlJobGroup.class);
-        queryParts.params.forEach(query::setParameter);
-        return query.setFirstResult(offset).setMaxResults(pagesize).getResultList();
+        Specification<XxlJobGroup> specification = XxlJobGroupSpecifications.build(appname, title);
+        return xxlJobGroupRepository.findAll(
+                specification,
+                new OffsetBasedPageRequest(offset, pagesize, Sort.by("appname", "title", "id"))
+        ).getContent();
     }
 
     @Override
     public int pageListCount(int offset, int pagesize, String appname, String title) {
-        QueryParts queryParts = buildQuery(appname, title);
-        TypedQuery<Long> query = entityManager.createQuery("select count(g) " + queryParts.jpql, Long.class);
-        queryParts.params.forEach(query::setParameter);
-        return query.getSingleResult().intValue();
+        return (int) xxlJobGroupRepository.count(XxlJobGroupSpecifications.build(appname, title));
     }
 
-    private QueryParts buildQuery(String appname, String title) {
-        StringBuilder sb = new StringBuilder("from XxlJobGroup g where 1=1");
-        Map<String, Object> params = new HashMap<>();
-        if (StringTool.isNotBlank(appname)) {
-            sb.append(" and g.appname like :appname");
-            params.put("appname", "%" + appname + "%");
+    private static class XxlJobGroupSpecifications {
+        private static Specification<XxlJobGroup> build(String appname, String title) {
+            return (root, query, cb) -> {
+                var predicate = cb.conjunction();
+                if (appname != null && !appname.isBlank()) {
+                    predicate = cb.and(predicate, cb.like(root.get("appname"), "%" + appname + "%"));
+                }
+                if (title != null && !title.isBlank()) {
+                    predicate = cb.and(predicate, cb.like(root.get("title"), "%" + title + "%"));
+                }
+                return predicate;
+            };
         }
-        if (StringTool.isNotBlank(title)) {
-            sb.append(" and g.title like :title");
-            params.put("title", "%" + title + "%");
-        }
-        return new QueryParts(sb.toString(), params);
-    }
-
-    private record QueryParts(String jpql, Map<String, Object> params) {
     }
 }
-

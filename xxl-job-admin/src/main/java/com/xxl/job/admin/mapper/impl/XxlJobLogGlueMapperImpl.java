@@ -2,8 +2,8 @@ package com.xxl.job.admin.mapper.impl;
 
 import com.xxl.job.admin.mapper.XxlJobLogGlueMapper;
 import com.xxl.job.admin.model.XxlJobLogGlue;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.xxl.job.admin.repository.XxlJobLogGlueRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,22 +12,22 @@ import java.util.List;
 @Repository
 public class XxlJobLogGlueMapperImpl implements XxlJobLogGlueMapper {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final XxlJobLogGlueRepository xxlJobLogGlueRepository;
+
+    public XxlJobLogGlueMapperImpl(XxlJobLogGlueRepository xxlJobLogGlueRepository) {
+        this.xxlJobLogGlueRepository = xxlJobLogGlueRepository;
+    }
 
     @Override
     @Transactional
     public int save(XxlJobLogGlue xxlJobLogGlue) {
-        entityManager.persist(xxlJobLogGlue);
+        xxlJobLogGlueRepository.save(xxlJobLogGlue);
         return 1;
     }
 
     @Override
     public List<XxlJobLogGlue> findByJobId(int jobId) {
-        return entityManager
-                .createQuery("from XxlJobLogGlue g where g.jobId = :jobId order by g.id desc", XxlJobLogGlue.class)
-                .setParameter("jobId", jobId)
-                .getResultList();
+        return xxlJobLogGlueRepository.findByJobIdOrderByIdDesc(jobId);
     }
 
     @Override
@@ -37,30 +37,18 @@ public class XxlJobLogGlueMapperImpl implements XxlJobLogGlueMapper {
             return deleteByJobId(jobId);
         }
 
-        List<Integer> keepIds = entityManager
-                .createQuery("select g.id from XxlJobLogGlue g where g.jobId = :jobId order by g.updateTime desc", Integer.class)
-                .setParameter("jobId", jobId)
-                .setMaxResults(limit)
-                .getResultList();
+        List<Integer> keepIds = xxlJobLogGlueRepository.findKeepIds(jobId, PageRequest.of(0, limit));
 
         if (keepIds.isEmpty()) {
             return deleteByJobId(jobId);
         }
 
-        return entityManager
-                .createQuery("delete from XxlJobLogGlue g where g.jobId = :jobId and g.id not in :keepIds")
-                .setParameter("jobId", jobId)
-                .setParameter("keepIds", keepIds)
-                .executeUpdate();
+        return xxlJobLogGlueRepository.deleteOld(jobId, keepIds);
     }
 
     @Override
     @Transactional
     public int deleteByJobId(int jobId) {
-        return entityManager
-                .createQuery("delete from XxlJobLogGlue g where g.jobId = :jobId")
-                .setParameter("jobId", jobId)
-                .executeUpdate();
+        return xxlJobLogGlueRepository.deleteByJobId(jobId);
     }
 }
-
