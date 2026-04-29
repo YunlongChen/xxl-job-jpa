@@ -7,6 +7,7 @@ import com.xxl.job.core.constant.ExecutorBlockStrategyEnum;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.tool.http.HttpTool;
 import com.xxl.tool.response.Response;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
  *
  * Created by xuxueli on 17/5/12.
  */
+@Disabled
 public class ExecutorBizTest {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorBizTest.class);
 

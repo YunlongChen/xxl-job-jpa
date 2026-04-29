@@ -1,37 +1,72 @@
 package com.xxl.job.admin.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+
 import java.util.Date;
 
 /**
  * xxl-job log, used to track trigger process
  * @author xuxueli  2015-12-19 23:19:09
  */
+@Entity
+@Table(name = "xxl_job_log")
 public class XxlJobLog {
 	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	
 	// job info
+	@Column(name = "job_group")
 	private int jobGroup;
+
+	@Column(name = "job_id")
 	private int jobId;
 
 	// execute info
+	@Column(name = "executor_address")
 	private String executorAddress;
+
+	@Column(name = "executor_handler")
 	private String executorHandler;
+
+	@Column(name = "executor_param", columnDefinition = "TEXT")
 	private String executorParam;
+
+	@Column(name = "executor_sharding_param")
 	private String executorShardingParam;
+
+	@Column(name = "executor_fail_retry_count")
 	private int executorFailRetryCount;
 	
 	// trigger info
+	@Column(name = "trigger_time")
 	private Date triggerTime;
+
+	@Column(name = "trigger_code")
 	private int triggerCode;
+
+	@Column(name = "trigger_msg", columnDefinition = "TEXT")
 	private String triggerMsg;
 	
 	// handle info
+	@Column(name = "handle_time")
 	private Date handleTime;
+
+	@Column(name = "handle_code")
 	private int handleCode;
+
+	@Column(name = "handle_msg", columnDefinition = "TEXT")
 	private String handleMsg;
 
 	// alarm info
+	@Column(name = "alarm_status")
 	private int alarmStatus;
 
 	public long getId() {

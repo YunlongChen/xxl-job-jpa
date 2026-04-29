@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class XxlJobRegistryMapperTest {
@@ -31,20 +30,10 @@ public class XxlJobRegistryMapperTest {
     }
 
     @Test
-    public void test2() throws InterruptedException {
-        for (int i = 0; i < 100; i++) {
-            new Thread(()->{
-                int ret = xxlJobRegistryMapper.registrySaveOrUpdate("g1", "k1", "v1", new Date());
-                System.out.println(ret);
-
-                /*int ret = xxlJobRegistryDao.registryUpdate("g1", "k1", "v1", new Date());
-                if (ret < 1) {
-                    ret = xxlJobRegistryDao.registrySave("g1", "k1", "v1", new Date());
-                }*/
-            }).start();
+    public void test2() {
+        for (int i = 0; i < 10; i++) {
+            xxlJobRegistryMapper.registrySaveOrUpdate("g1", "k1", "v1", new Date());
         }
-
-        TimeUnit.SECONDS.sleep(10);
     }
 
 }

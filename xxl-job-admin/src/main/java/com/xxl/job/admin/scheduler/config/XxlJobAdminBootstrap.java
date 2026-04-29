@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 
 @Component
+@ConditionalOnProperty(prefix = "xxl.job.admin", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XxlJobAdminBootstrap implements InitializingBean, DisposableBean {
     private static final Logger logger = LoggerFactory.getLogger(XxlJobAdminBootstrap.class);
 

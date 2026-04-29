@@ -1,16 +1,41 @@
 package com.xxl.job.admin.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
 import java.util.Date;
 
+@Entity
+@Table(
+        name = "xxl_job_log_report",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "i_trigger_day", columnNames = {"trigger_day"})
+        }
+)
 public class XxlJobLogReport {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "trigger_day")
     private Date triggerDay;
 
+    @Column(name = "running_count")
     private int runningCount;
+
+    @Column(name = "suc_count")
     private int sucCount;
+
+    @Column(name = "fail_count")
     private int failCount;
 
+    @Column(name = "update_time")
     private Date updateTime;
 
     public int getId() {

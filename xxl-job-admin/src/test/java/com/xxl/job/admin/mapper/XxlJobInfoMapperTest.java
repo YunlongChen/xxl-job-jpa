@@ -2,7 +2,6 @@ package com.xxl.job.admin.mapper;
 
 import com.xxl.job.admin.constant.TriggerStatus;
 import com.xxl.job.admin.model.XxlJobInfo;
-import com.xxl.job.admin.scheduler.config.XxlJobAdminBootstrap;
 import com.xxl.job.admin.scheduler.misfire.MisfireStrategyEnum;
 import com.xxl.job.admin.scheduler.type.ScheduleTypeEnum;
 import com.xxl.tool.core.CollectionTool;
@@ -32,6 +31,11 @@ public class XxlJobInfoMapperTest {
 		logger.info("", list_count);
 
 		List<XxlJobInfo> list2 = xxlJobInfoMapper.getJobsByGroup(1);
+		if (!list2.isEmpty()) {
+			XxlJobInfo info = list2.getFirst();
+			logger.info("Test LOB field reading without Transaction: executorParam={}, glueSource={}", 
+				info.getExecutorParam(), info.getGlueSource());
+		}
 	}
 	
 	@Test
@@ -106,7 +110,7 @@ public class XxlJobInfoMapperTest {
 		// batch update
 		List<List<XxlJobInfo>> scheduleListBatches = CollectionTool.split(list2, batchSize);
 		for (List<XxlJobInfo> scheduleListBatch : scheduleListBatches) {
-			int totalAffected = XxlJobAdminBootstrap.getInstance().getXxlJobInfoMapper().scheduleBatchUpdate(scheduleListBatch);
+			int totalAffected = xxlJobInfoMapper.scheduleBatchUpdate(scheduleListBatch);
 			logger.info("scheduleBatchUpdate records:" + totalAffected);
 		}
 	}
