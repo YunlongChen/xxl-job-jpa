@@ -8,7 +8,6 @@ import com.xxl.job.core.context.XxlJobContext;
 import com.xxl.job.core.constant.Const;
 import com.xxl.tool.http.HttpTool;
 import com.xxl.tool.response.Response;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author xuxueli 2017-07-28 22:14:52
  */
-@Disabled
 public class AdminBizTest {
     private static final Logger logger = LoggerFactory.getLogger(AdminBizTest.class);
 

@@ -1,43 +1,19 @@
 package com.xxl.job.admin.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
-
 import java.util.Date;
 
 /**
  * xxl-job log for glue, used to track job code process
  * @author xuxueli 2016-5-19 17:57:46
  */
-@Entity
-@Table(name = "xxl_job_logglue")
 public class XxlJobLogGlue {
 	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-
-	@Column(name = "job_id")
 	private int jobId;				// 任务主键ID
-
-	@Column(name = "glue_type")
 	private String glueType;		// GLUE类型	#com.xxl.job.core.glue.GlueTypeEnum
-
-	@Column(name = "glue_source", columnDefinition = "TEXT")
 	private String glueSource;
-
-	@Column(name = "glue_remark")
 	private String glueRemark;
-
-	@Column(name = "add_time")
 	private Date addTime;
-
-	@Column(name = "update_time")
 	private Date updateTime;
 
 	public int getId() {

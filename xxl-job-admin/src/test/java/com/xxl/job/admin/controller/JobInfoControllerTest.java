@@ -1,24 +1,20 @@
 package com.xxl.job.admin.controller;
 
+import com.xxl.sso.core.constant.Const;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 public class JobInfoControllerTest extends AbstractSpringMvcTest {
   private static Logger logger = LoggerFactory.getLogger(JobInfoControllerTest.class);
-
-  @Value("${xxl-sso.token.key}")
-  private String tokenKey;
 
   private Cookie cookie;
 
@@ -30,8 +26,7 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
             .param("userName", "admin")
             .param("password", "123456")
     ).andReturn();
-    cookie = ret.getResponse().getCookie(tokenKey);
-    assertNotNull(cookie);
+    cookie = ret.getResponse().getCookie(Const.XXL_SSO_TOKEN);
   }
 
   @Test

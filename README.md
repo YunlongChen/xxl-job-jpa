@@ -70,12 +70,6 @@ XXL-JOB 是一个开源且免费项目，其正在进行的开发完全得益于
 - [中文文档](https://www.xuxueli.com/xxl-job/)
 - [English Documentation](https://www.xuxueli.com/xxl-job/en/)
 
-## Fork: xxl-job-jpa
-- 本仓库为 XXL-JOB 的 fork 版本，目标是将调度中心（xxl-job-admin）的存储层实现改为 JPA（Hibernate），对外功能与接口保持不变。
-- 生产环境仍推荐使用 MySQL，建表脚本保持兼容：doc/db/tables_xxl_job.sql
-- 单元测试默认使用 H2（MySQL MODE），通过 JPA（Hibernate）自动建表，并使用初始化脚本填充基础数据：xxl-job-admin/src/test/resources/data.sql
-- 测试/本地调试可关闭调度线程启动：xxl.job.admin.enabled=false
-
 
 ## Communication    
 - [社区交流](https://www.xuxueli.com/page/community.html)

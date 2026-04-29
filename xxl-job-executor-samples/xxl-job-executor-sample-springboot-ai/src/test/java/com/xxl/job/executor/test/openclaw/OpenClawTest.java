@@ -1,7 +1,6 @@
 package com.xxl.job.executor.test.openclaw;
 
 import jakarta.annotation.Resource;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import reactor.core.publisher.Flux;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Disabled
 @SpringBootTest
 public class OpenClawTest {
     private static final Logger logger = LoggerFactory.getLogger(OpenClawTest.class);

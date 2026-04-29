@@ -1,6 +1,8 @@
 package com.xxl.job.admin.mapper;
 
 import com.xxl.job.admin.model.XxlJobInfo;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -9,34 +11,35 @@ import java.util.List;
  * job info
  * @author xuxueli 2016-1-12 18:03:45
  */
+@Mapper
 public interface XxlJobInfoMapper {
 
-	List<XxlJobInfo> pageList(int offset,
-							  int pagesize,
-							  int jobGroup,
-							  int triggerStatus,
-							  String jobDesc,
-							  String executorHandler,
-							  String author);
-	int pageListCount(int offset,
-					  int pagesize,
-					  int jobGroup,
-					  int triggerStatus,
-					  String jobDesc,
-					  String executorHandler,
-					  String author);
+	public List<XxlJobInfo> pageList(@Param("offset") int offset,
+									 @Param("pagesize") int pagesize,
+									 @Param("jobGroup") int jobGroup,
+									 @Param("triggerStatus") int triggerStatus,
+									 @Param("jobDesc") String jobDesc,
+									 @Param("executorHandler") String executorHandler,
+									 @Param("author") String author);
+	public int pageListCount(@Param("offset") int offset,
+							 @Param("pagesize") int pagesize,
+							 @Param("jobGroup") int jobGroup,
+							 @Param("triggerStatus") int triggerStatus,
+							 @Param("jobDesc") String jobDesc,
+							 @Param("executorHandler") String executorHandler,
+							 @Param("author") String author);
 	
-	int save(XxlJobInfo info);
+	public int save(XxlJobInfo info);
 
-	XxlJobInfo loadById(int id);
+	public XxlJobInfo loadById(@Param("id") int id);
 	
-	int update(XxlJobInfo xxlJobInfo);
+	public int update(XxlJobInfo xxlJobInfo);
 	
-	int delete(long id);
+	public int delete(@Param("id") long id);
 
-	List<XxlJobInfo> getJobsByGroup(int jobGroup);
+	public List<XxlJobInfo> getJobsByGroup(@Param("jobGroup") int jobGroup);
 
-	int findAllCount();
+	public int findAllCount();
 
 	/**
 	 * find schedule job, limit "trigger_status = 1"
@@ -45,7 +48,7 @@ public interface XxlJobInfoMapper {
 	 * @param pagesize
 	 * @return
 	 */
-	List<XxlJobInfo> scheduleJobQuery(long maxNextTime, int pagesize );
+	public List<XxlJobInfo> scheduleJobQuery(@Param("maxNextTime") long maxNextTime, @Param("pagesize") int pagesize );
 
 	/**
 	 * update schedule job
@@ -56,7 +59,7 @@ public interface XxlJobInfoMapper {
 	 * @param xxlJobInfo
 	 * @return
 	 */
-	int scheduleUpdate(XxlJobInfo xxlJobInfo);
+	public int scheduleUpdate(XxlJobInfo xxlJobInfo);
 
 	/**
 	 * batch update job info
@@ -64,6 +67,6 @@ public interface XxlJobInfoMapper {
 	 * @param jobInfoList
 	 * @return
 	 */
-	int scheduleBatchUpdate(List<XxlJobInfo> jobInfoList);
+	public int scheduleBatchUpdate(@Param("list") List<XxlJobInfo> jobInfoList);
 
 }

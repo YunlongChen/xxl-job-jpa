@@ -1,6 +1,8 @@
 package com.xxl.job.admin.mapper;
 
 import com.xxl.job.admin.model.XxlJobRegistry;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
 import java.util.List;
@@ -8,20 +10,21 @@ import java.util.List;
 /**
  * Created by xuxueli on 16/9/30.
  */
+@Mapper
 public interface XxlJobRegistryMapper {
 
-    List<Integer> findDead(int timeout,
-                           Date nowTime);
+    public List<Integer> findDead(@Param("timeout") int timeout,
+                                  @Param("nowTime") Date nowTime);
 
-    int removeDead(List<Integer> ids);
+    public int removeDead(@Param("ids") List<Integer> ids);
 
-    List<XxlJobRegistry> findAll(int timeout,
-                                 Date nowTime);
+    public List<XxlJobRegistry> findAll(@Param("timeout") int timeout,
+                                        @Param("nowTime") Date nowTime);
 
-    int registrySaveOrUpdate(String registryGroup,
-                             String registryKey,
-                             String registryValue,
-                             Date updateTime);
+    public int registrySaveOrUpdate(@Param("registryGroup") String registryGroup,
+                            @Param("registryKey") String registryKey,
+                            @Param("registryValue") String registryValue,
+                            @Param("updateTime") Date updateTime);
 
     /*public int registryUpdate(@Param("registryGroup") String registryGroup,
                               @Param("registryKey") String registryKey,
@@ -33,11 +36,11 @@ public interface XxlJobRegistryMapper {
                             @Param("registryValue") String registryValue,
                             @Param("updateTime") Date updateTime);*/
 
-    int registryDelete(String registryGroup,
-                       String registryKey,
-                       String registryValue);
+    public int registryDelete(@Param("registryGroup") String registryGroup,
+                          @Param("registryKey") String registryKey,
+                          @Param("registryValue") String registryValue);
 
-    int removeByRegistryGroupAndKey(String registryGroup,
-                                    String registryKey);
+    public int removeByRegistryGroupAndKey(@Param("registryGroup") String registryGroup,
+                                           @Param("registryKey") String registryKey);
 
 }

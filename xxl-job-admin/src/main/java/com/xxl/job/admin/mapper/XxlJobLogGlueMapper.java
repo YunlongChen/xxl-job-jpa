@@ -1,6 +1,8 @@
 package com.xxl.job.admin.mapper;
 
 import com.xxl.job.admin.model.XxlJobLogGlue;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -8,14 +10,15 @@ import java.util.List;
  * job log for glue
  * @author xuxueli 2016-5-19 18:04:56
  */
+@Mapper
 public interface XxlJobLogGlueMapper {
 	
-	int save(XxlJobLogGlue xxlJobLogGlue);
+	public int save(XxlJobLogGlue xxlJobLogGlue);
 	
-	List<XxlJobLogGlue> findByJobId(int jobId);
+	public List<XxlJobLogGlue> findByJobId(@Param("jobId") int jobId);
 
-	int removeOld(int jobId, int limit);
+	public int removeOld(@Param("jobId") int jobId, @Param("limit") int limit);
 
-	int deleteByJobId(int jobId);
+	public int deleteByJobId(@Param("jobId") int jobId);
 	
 }

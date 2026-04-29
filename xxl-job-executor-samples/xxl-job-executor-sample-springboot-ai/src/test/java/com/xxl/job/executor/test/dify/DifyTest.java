@@ -6,7 +6,6 @@ import io.github.imfangs.dify.client.DifyWorkflowClient;
 import io.github.imfangs.dify.client.enums.ResponseMode;
 import io.github.imfangs.dify.client.model.workflow.WorkflowRunRequest;
 import io.github.imfangs.dify.client.model.workflow.WorkflowRunResponse;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
 
-@Disabled
 @SpringBootTest
 public class DifyTest {
     private static final Logger logger = LoggerFactory.getLogger(DifyTest.class);
