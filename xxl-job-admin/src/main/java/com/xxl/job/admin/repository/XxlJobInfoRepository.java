@@ -19,5 +19,5 @@ public interface XxlJobInfoRepository extends JpaRepository<XxlJobInfo, Integer>
     List<XxlJobInfo> findByTriggerStatusAndTriggerNextTimeLessThanEqualOrderByIdAsc(int triggerStatus, long maxNextTime, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<XxlJobInfo> findById(int id);
+    Optional<XxlJobInfo> findById(Integer id);
 }
