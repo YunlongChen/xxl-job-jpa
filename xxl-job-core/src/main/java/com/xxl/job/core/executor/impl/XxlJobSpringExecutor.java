@@ -58,6 +58,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
         // super start
         try {
             super.start();
+            instance = this;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -192,6 +193,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
 
     // ---------------------- applicationContext ----------------------
     private static ApplicationContext applicationContext;
+    private static volatile XxlJobSpringExecutor instance;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -200,6 +202,14 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
 
     public static ApplicationContext getApplicationContext() {
         return applicationContext;
+    }
+
+    public static XxlJobSpringExecutor getInstance() {
+        return instance;
+    }
+
+    public String getAppname() {
+        return appname;
     }
 
 }

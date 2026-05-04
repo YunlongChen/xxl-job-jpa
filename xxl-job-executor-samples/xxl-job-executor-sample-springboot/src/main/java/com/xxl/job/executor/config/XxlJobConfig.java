@@ -50,24 +50,24 @@ public class XxlJobConfig {
     private String excludedPackage;
 
 
-    @Bean
-    public XxlJobSpringExecutor xxlJobExecutor() {
-        logger.info(">>>>>>>>>>> xxl-job config init.");
-        XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
-        xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
-        xxlJobSpringExecutor.setAccessToken(accessToken);
-        xxlJobSpringExecutor.setTimeout(timeout);
-        xxlJobSpringExecutor.setEnabled(enabled);
-        xxlJobSpringExecutor.setAppname(appname);
-        xxlJobSpringExecutor.setAddress(address);
-        xxlJobSpringExecutor.setIp(ip);
-        xxlJobSpringExecutor.setPort(port);
-        xxlJobSpringExecutor.setLogPath(logPath);
-        xxlJobSpringExecutor.setLogRetentionDays(logRetentionDays);
-        xxlJobSpringExecutor.setExcludedPackage(excludedPackage);
-
-        return xxlJobSpringExecutor;
-    }
+//    @Bean
+//    public XxlJobSpringExecutor xxlJobExecutor() {
+//        logger.info(">>>>>>>>>>> xxl-job config init.");
+//        XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
+//        xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
+//        xxlJobSpringExecutor.setAccessToken(accessToken);
+//        xxlJobSpringExecutor.setTimeout(timeout);
+//        xxlJobSpringExecutor.setEnabled(enabled);
+//        xxlJobSpringExecutor.setAppname(appname);
+//        xxlJobSpringExecutor.setAddress(address);
+//        xxlJobSpringExecutor.setIp(ip);
+//        xxlJobSpringExecutor.setPort(port);
+//        xxlJobSpringExecutor.setLogPath(logPath);
+//        xxlJobSpringExecutor.setLogRetentionDays(logRetentionDays);
+//        xxlJobSpringExecutor.setExcludedPackage(excludedPackage);
+//
+//        return xxlJobSpringExecutor;
+//    }
 
     /**
      * 针对多网卡、容器内部署等情况，可借助 "spring-cloud-commons" 提供的 "InetUtils" 组件灵活定制注册IP；

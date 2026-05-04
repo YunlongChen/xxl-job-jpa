@@ -12,6 +12,7 @@
 
 	<modules>
 		<module>xxl-job-core</module>
+		<module>xxl-job-spring-boot-starter</module>
 		<module>xxl-job-admin</module>
 		<module>xxl-job-executor-samples</module>
     </modules>
@@ -154,6 +155,13 @@
 				<version>${project.parent.version}</version>
 			</dependency>
 
+			<!-- xxl-job-spring-boot-starter -->
+			<dependency>
+				<groupId>com.xuxueli</groupId>
+				<artifactId>xxl-job-spring-boot-starter</artifactId>
+				<version>${project.parent.version}</version>
+			</dependency>
+
 			<!-- xxl-sso (xxl-tool、gson) -->
 			<dependency>
 				<groupId>com.xuxueli</groupId>
@@ -217,6 +225,7 @@
 			</activation>
 			<modules>
 				<module>xxl-job-core</module>
+				<module>xxl-job-spring-boot-starter</module>
 			</modules>
 			<build>
 				<plugins>
@@ -293,6 +302,7 @@
 								<artifact>xxl-job-executor-sample-frameless</artifact>
 								<artifact>xxl-job-executor-sample-springboot</artifact>
 								<artifact>xxl-job-executor-sample-springboot-ai</artifact>
+								<artifact>xxl-job-spring-boot-starter</artifact>
 							</excludeArtifacts>
 						</configuration>
 					</plugin>

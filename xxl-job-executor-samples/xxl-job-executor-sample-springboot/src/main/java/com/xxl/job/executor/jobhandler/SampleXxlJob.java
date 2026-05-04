@@ -1,6 +1,8 @@
 package com.xxl.job.executor.jobhandler;
 
 import com.xxl.job.core.context.XxlJobHelper;
+import com.xxl.job.core.executor.XxlJobExecutor;
+import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import com.xxl.tool.core.StringTool;
 import com.xxl.tool.json.GsonTool;
@@ -21,12 +23,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * XxlJob开发示例（Bean模式）
- *
+ * <p>
  * 开发步骤：
- *      1、任务开发：在Spring Bean实例中，开发Job方法；
- *      2、注解配置：为Job方法添加注解 "@XxlJob(value="自定义jobhandler名称", init = "JobHandler初始化方法", destroy = "JobHandler销毁方法")"，注解value值对应的是调度中心新建任务的JobHandler属性的值。
- *      3、执行日志：需要通过 "XxlJobHelper.log" 打印执行日志；
- *      4、任务结果：默认任务结果为 "成功" 状态，不需要主动设置；如有诉求，比如设置任务结果为失败，可以通过 "XxlJobHelper.handleFail/handleSuccess" 自主设置任务结果；
+ * 1、任务开发：在Spring Bean实例中，开发Job方法；
+ * 2、注解配置：为Job方法添加注解 "@XxlJob(value="自定义jobhandler名称", init = "JobHandler初始化方法", destroy = "JobHandler销毁方法")"，注解value值对应的是调度中心新建任务的JobHandler属性的值。
+ * 3、执行日志：需要通过 "XxlJobHelper.log" 打印执行日志；
+ * 4、任务结果：默认任务结果为 "成功" 状态，不需要主动设置；如有诉求，比如设置任务结果为失败，可以通过 "XxlJobHelper.handleFail/handleSuccess" 自主设置任务结果；
  *
  * @author xuxueli 2019-12-11 21:52:51
  */
@@ -59,8 +61,17 @@ public class SampleXxlJob {
         // 分片参数
         int shardIndex = XxlJobHelper.getShardIndex();
         int shardTotal = XxlJobHelper.getShardTotal();
+        String jobParam = XxlJobHelper.getJobParam();
+        long jobId = XxlJobHelper.getJobId();
+        System.out.println("jobId + \", jobParam = \" + jobParam = " + jobId + ", jobParam = " + jobParam);
 
         XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
+        XxlJobExecutor.registryJobHandler(String.format("test-%s", jobId), new IJobHandler() {
+            @Override
+            public void execute() throws Exception {
+                System.out.println(XxlJobHelper.getJobParam());
+            }
+        });
 
         // 业务逻辑
         for (int i = 0; i < shardTotal; i++) {
@@ -76,8 +87,8 @@ public class SampleXxlJob {
 
     /**
      * 3、命令行任务
-     *
-     *  参数示例："ls -a" 或者 "pwd"
+     * <p>
+     * 参数示例："ls -a" 或者 "pwd"
      */
     @XxlJob("commandJobHandler")
     public void commandJobHandler() throws Exception {
@@ -87,7 +98,7 @@ public class SampleXxlJob {
         BufferedReader bufferedReader = null;
         try {
             // valid
-            if (command==null || command.trim().length()==0) {
+            if (command == null || command.trim().length() == 0) {
                 XxlJobHelper.handleFail("command empty.");
                 return;
             }
@@ -126,7 +137,7 @@ public class SampleXxlJob {
         if (exitValue == 0) {
             // default success
         } else {
-            XxlJobHelper.handleFail("command exit value("+exitValue+") is failed");
+            XxlJobHelper.handleFail("command exit value(" + exitValue + ") is failed");
         }
 
     }
@@ -134,9 +145,9 @@ public class SampleXxlJob {
 
     /**
      * 4、跨平台Http任务
-     *
-     *  参数示例：
-     *  <pre>
+     * <p>
+     * 参数示例：
+     * <pre>
      *      // 1、简单示例：
      *      {
      *          "url": "http://www.baidu.com",
@@ -169,8 +180,8 @@ public class SampleXxlJob {
 
         // param data
         String param = XxlJobHelper.getJobParam();
-        if (param==null || param.trim().isEmpty()) {
-            XxlJobHelper.log("param["+ param +"] invalid.");
+        if (param == null || param.trim().isEmpty()) {
+            XxlJobHelper.log("param[" + param + "] invalid.");
 
             XxlJobHelper.handleFail();
             return;
@@ -193,12 +204,12 @@ public class SampleXxlJob {
             return;
         }
         if (StringTool.isBlank(httpJobParam.getUrl())) {
-            XxlJobHelper.log("url["+ httpJobParam.getUrl() +"] invalid.");
+            XxlJobHelper.log("url[" + httpJobParam.getUrl() + "] invalid.");
             XxlJobHelper.handleFail();
             return;
         }
         if (!isValidDomain(httpJobParam.getUrl())) {
-            XxlJobHelper.log("url["+ httpJobParam.getUrl() +"] not allowed.");
+            XxlJobHelper.log("url[" + httpJobParam.getUrl() + "] not allowed.");
             XxlJobHelper.handleFail();
             return;
         }
@@ -206,7 +217,7 @@ public class SampleXxlJob {
         if (StringTool.isNotBlank(httpJobParam.getMethod())) {
             Method methodParam = Method.valueOf(httpJobParam.getMethod().toUpperCase());
             if (methodParam == null) {
-                XxlJobHelper.log("method["+ httpJobParam.getMethod() +"] invalid.");
+                XxlJobHelper.log("method[" + httpJobParam.getMethod() + "] invalid.");
                 XxlJobHelper.handleFail();
                 return;
             }
@@ -287,7 +298,7 @@ public class SampleXxlJob {
     /**
      * http job param
      */
-    private static class HttpJobParam{
+    private static class HttpJobParam {
         private String url;                                     // 请求 Url
         private String method;                                  // Method
         private String contentType;                             // Content-Type
@@ -378,10 +389,12 @@ public class SampleXxlJob {
     public void demoJobHandler2() throws Exception {
         XxlJobHelper.log("XXL-JOB, Hello World.");
     }
-    public void init(){
+
+    public void init() {
         logger.info("init");
     }
-    public void destroy(){
+
+    public void destroy() {
         logger.info("destroy");
     }
 

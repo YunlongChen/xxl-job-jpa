@@ -40,7 +40,7 @@ public class XxlJobExecutor  {
     private String accessToken;
     private int timeout;
     private Boolean enabled;
-    private String appname;
+    protected String appname;  // protected for subclass access (e.g., XxlJobSpringExecutor)
     private String address;
     private String ip;
     private int port;
@@ -78,6 +78,9 @@ public class XxlJobExecutor  {
         this.logRetentionDays = logRetentionDays;
     }
 
+    public String getAppname() {
+        return appname;
+    }
 
     // ---------------------- start + stop ----------------------
     public void start() throws Exception {
