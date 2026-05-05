@@ -71,12 +71,15 @@ xxl-job/
 │       ├── mapper/                  # MyBatis mappers (legacy compatibility)
 │       ├── scheduler/               # Scheduling logic (JobScheduleHelper, triggers)
 │       └── service/                 # Business services
-├── xxl-job-executor-samples/        # Example executors
-│   ├── xxl-job-executor-sample-springboot/
-│   ├── xxl-job-executor-sample-springboot-ai/  # AI tasks (Spring AI, Ollama, Dify)
-│   └── xxl-job-executor-sample-frameless/
-└── doc/
-    └── db/tables_xxl_job.sql         # Database schema (MySQL compatible)
+├── xxl-job-spring-boot-starter/     # Spring Boot auto-configuration (on spring-starter branch)
+│   └── com.xxl.job.spring.boot/
+│       ├── XxlJobProperties.java           # @ConfigurationProperties
+│       ├── XxlJobExecutorAutoConfiguration.java  # Auto-config
+│       └── XxlJobHealthIndicator.java      # Actuator health check
+└── xxl-job-executor-samples/        # Example executors
+    ├── xxl-job-executor-sample-springboot/
+    ├── xxl-job-executor-sample-springboot-ai/  # AI tasks (Spring AI, Ollama, Dify)
+    └── xxl-job-executor-sample-frameless/
 ```
 
 ## Test Configuration
@@ -87,3 +90,56 @@ Tests in `xxl-job-admin/src/test` use H2 in-memory database:
 - `xxl.job.admin.enabled=false` disables the scheduling thread pool during tests
 
 Admin password (test): `admin` / `8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92` (SHA-256 of "123456")
+
+## Spring Boot Starter (spring-starter branch)
+
+The `xxl-job-spring-boot-starter` module provides auto-configuration for Spring Boot applications.
+
+### Quick Start
+
+1. Add dependency:
+```xml
+<dependency>
+    <groupId>com.xuxueli</groupId>
+    <artifactId>xxl-job-spring-boot-starter</artifactId>
+    <version>3.4.1-SNAPSHOT</version>
+</dependency>
+```
+
+2. Configure `application.properties`:
+```properties
+xxl.job.admin.addresses=http://127.0.0.1:8080/xxl-job-admin
+xxl.job.executor.appname=my-app
+```
+
+3. Use `@EnableXxlJob` annotation (optional):
+```java
+@EnableXxlJob
+@SpringBootApplication
+public class MyApplication { ... }
+```
+
+### Configuration Properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `xxl.job.admin.addresses` | (required) | Admin server addresses |
+| `xxl.job.admin.accessToken` | - | Access token |
+| `xxl.job.admin.timeout` | 3 | RPC timeout (seconds) |
+| `xxl.job.executor.appname` | (required) | Executor app name |
+| `xxl.job.executor.port` | 9999 | Server port |
+| `xxl.job.executor.enabled` | true | Enable executor |
+| `xxl.job.executor.logPath` | - | Log path |
+| `xxl.job.executor.logRetentionDays` | -1 | Log retention days |
+| `xxl.job.executor.excludedPackage` | spring.,org.springframework. | Packages to exclude |
+| `xxl.job.health-indicator-enabled` | true | Enable actuator health indicator |
+
+### Run Tests
+
+```bash
+# Run starter module tests
+mvn test -pl xxl-job-spring-boot-starter
+
+# Run sample module tests
+mvn test -pl xxl-job-executor-samples/xxl-job-executor-sample-springboot
+```
